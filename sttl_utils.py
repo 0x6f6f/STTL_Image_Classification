@@ -2,6 +2,7 @@ import math
 from types import new_class
 from torch.optim.lr_scheduler import LambdaLR
 
+
 def SinelineLR(optimizer, warmup_epochs, max_epochs):
     def lr_lambda(current_epoch):
         if current_epoch < warmup_epochs:
@@ -9,17 +10,21 @@ def SinelineLR(optimizer, warmup_epochs, max_epochs):
         else:
             progress = (current_epoch - warmup_epochs) / (max_epochs - warmup_epochs)
             return 0.5 * (1.0 + math.sin(math.pi * progress))
-  
+
     scheduler = LambdaLR(optimizer, lr_lambda)
     return scheduler
+
 
 import numpy as np
 import torch.nn as nn
 from ignite.metrics import Accuracy, Loss, Metric
 from ignite.metrics.metric import sync_all_reduce, reinit__is_reduced
 
+
 class NewData(Metric):
-    def __init__(self, trainer, output_transform=lambda x: x, device="cuda", threshold=0.9):
+    def __init__(
+        self, trainer, output_transform=lambda x: x, device="cuda", threshold=0.9
+    ):
         self.new_data = []
         self.trainer = trainer
         self.p = threshold
@@ -34,7 +39,7 @@ class NewData(Metric):
     def compute(self):
         data = np.asarray(self.new_data, dtype=object)
         cnt = len(self.new_data)
-        print(f'returning {cnt} pesdo-labels from test set')
+        print(f"returning {cnt} pesdo-labels from test set")
         return (data, cnt)
 
     @reinit__is_reduced
@@ -51,8 +56,11 @@ class NewData(Metric):
                 data = [x_test[i], label]
                 self.new_data.append(data)
 
+
 import torch
 from torch.utils.data import Subset
+
+
 class CustomSubset(Subset):
     def __init__(self, dataset, indices):
         super().__init__(dataset, indices)
@@ -78,7 +86,10 @@ class CustomSubset(Subset):
         for i in range(self.new_data_len):
             self.new_data[i][0] = np.float32(self.new_data[i][0])
 
+
 import os
+
+
 def clear_folder(folder_path):
     if not os.path.exists(folder_path):
         return
